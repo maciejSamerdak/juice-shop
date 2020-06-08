@@ -52,9 +52,21 @@ export class ProductDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
+  encryptUsername (username: String) {
+    const firstCharacter = username[0]
+    const atLocation = username.indexOf('@')
+    let remainingCharacters = ''
+    if (atLocation > 2) {
+      remainingCharacters = username.substring(atLocation - 2)
+    } else {
+      remainingCharacters = username.substring(atLocation)
+    }
+    return firstCharacter + '*'.repeat(5) + remainingCharacters
+  }
+
   addReview (textPut: HTMLTextAreaElement) {
 
-    const review = { message: textPut.value, author: this.author }
+    const review = { message: textPut.value, author: this.encryptUsername(this.author) }
 
     textPut.value = ''
     this.productReviewService.create(this.data.productData.id, review).subscribe(() => {
