@@ -98,9 +98,25 @@ require('./lib/startup/restoreOverwrittenFilesWithOriginals')()
 require('./lib/startup/cleanupFtpFolder')()
 require('./lib/startup/validatePreconditions')()
 require('./lib/startup/validateConfig')()
-
+const mimeTypeMapMemory = {
+  'application/pdf':'pdf', 
+  'application/xml':'xml', 
+  'text/xml' : 'xml', 
+  'application/zip' : 'zip', 
+  'application/x-zip-compressed' : 'zip', 
+  'multipart/x-zip' : 'x-zip'
+}
 const multer = require('multer')
-const uploadToMemory = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200000 } })
+const uploadToMemory = multer({ storage: multer.memoryStorage(), 
+  fileFilter: function (req, file, cb){
+    const isValid = mimeTypeMapMemory[file.mimetype]
+    let error = new Error('Invalid mime type')
+    if (!isValid) {
+      return cb(error,false)
+    }
+    error = null
+    cb(error, true)
+  },limits: { fileSize: 100000 } })
 const mimeTypeMap = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
@@ -380,7 +396,7 @@ app.post('/rest/2fa/disable',
 /* Serve metrics */
 const Metrics = metrics.observeMetrics()
 const metricsUpdateLoop = Metrics.updateLoop
-app.get('/metrics', metrics.serveMetrics())
+app.get('/metrics',insecurity.denyAll(),metrics.serveMetrics())
 
 /* Verifying DB related challenges can be postponed until the next request for challenges is coming via finale */
 app.use(verify.databaseRelatedChallenges())
