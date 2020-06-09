@@ -26,7 +26,12 @@ module.exports = function login () {
 
   return (req, res, next) => {
     verifyPreLoginChallenges(req)
-    models.sequelize.query(`SELECT * FROM Users WHERE email = '${req.body.email || ''}' AND password = '${insecurity.hash(req.body.password || '')}' AND deletedAt IS NULL`, { model: models.User, plain: true })
+    var email = (req.body.email || '')
+    var password = insecurity.hash(req.body.password || '')
+    models.sequelize.query(`SELECT * FROM Users WHERE email = $1 
+        AND password = $2 AND deletedAt IS NULL`, 
+        { bind: [email, password], type: models.sequelize.QueryTypes.SELECT, 
+        model: models.User, plain: true })
       .then((authenticatedUser) => {
         let user = utils.queryResultToJson(authenticatedUser)
         const rememberedEmail = insecurity.userEmailFrom(req)

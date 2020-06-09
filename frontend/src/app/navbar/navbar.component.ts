@@ -8,7 +8,7 @@ import { ChallengeService } from '../Services/challenge.service'
 import { UserService } from '../Services/user.service'
 import { AdministrationService } from '../Services/administration.service'
 import { ConfigurationService } from '../Services/configuration.service'
-import { Component, EventEmitter, NgZone, OnInit, Output } from '@angular/core'
+import { Component, EventEmitter, NgZone, OnInit, Output, SecurityContext } from '@angular/core'
 import { CookieService } from 'ngx-cookie-service'
 import { TranslateService } from '@ngx-translate/core'
 import { Router } from '@angular/router'
@@ -16,6 +16,7 @@ import { SocketIoService } from '../Services/socket-io.service'
 import { LanguagesService } from '../Services/languages.service'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { BasketService } from '../Services/basket.service'
+import { DomSanitizer } from '@angular/platform-browser'
 
 import {
   faBomb,
@@ -70,7 +71,7 @@ export class NavbarComponent implements OnInit {
     private configurationService: ConfigurationService, private userService: UserService, private ngZone: NgZone,
     private cookieService: CookieService, private router: Router, private translate: TranslateService,
     private io: SocketIoService, private langService: LanguagesService, private loginGuard: LoginGuard,
-    private snackBar: MatSnackBar, private basketService: BasketService) { }
+    private snackBar: MatSnackBar, private basketService: BasketService, private sanitizer: DomSanitizer) { }
 
   ngOnInit () {
     this.getLanguages()
@@ -139,7 +140,8 @@ export class NavbarComponent implements OnInit {
 
   search (value: string) {
     if (value) {
-      const queryParams = { queryParams: { q: value } }
+      var sanitizedValue: string = this.sanitizer.sanitize(SecurityContext.HTML, value)
+      const queryParams = { queryParams: { q: sanitizedValue } }
       this.ngZone.run(() => this.router.navigate(['/search'], queryParams))
     } else {
       this.ngZone.run(() => this.router.navigate(['/search']))
